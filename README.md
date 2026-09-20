@@ -316,6 +316,40 @@ Honest limits, none of which are fixable in a web page:
   anything real.
 - **The machine itself.** An offline page on a compromised computer is not safe.
 
+## Verify your download
+
+`SHA256SUMS.txt` in this repository records the SHA-256 of `index.html` as
+published. The release asset `myseedphrase.html` is the same file under its
+download name, so one value checks either.
+
+```bash
+# macOS
+shasum -a 256 ~/Downloads/myseedphrase.html
+
+# Linux
+sha256sum ~/Downloads/myseedphrase.html
+```
+
+```
+:: Windows (Command Prompt)
+certutil -hashfile %USERPROFILE%\Downloads\myseedphrase.html SHA256
+```
+
+Compare it with the value in `SHA256SUMS.txt`, or the one on the release page —
+they are the same value. If yours differs, stop, and do not open the file.
+
+With a clone, check the repository's own copy in one command:
+
+```bash
+shasum -a 256 -c SHA256SUMS.txt   # macOS;  sha256sum -c SHA256SUMS.txt on Linux
+```
+
+Be clear about what that proves. It tells you the file you are holding is the
+file that was published. It cannot tell you the published file is honest:
+`SHA256SUMS.txt` travels in the same repository as the page, so whoever could
+change one could change the other. The section below, and step 5 in the guide
+above, are what speak to the contents.
+
 ## Verify before you trust it
 
 Don't take the above on faith. Two checks, both quick:
@@ -452,6 +486,36 @@ remaining 7, for the full 128 bits a 12-word phrase should carry.
 
 There is no build step. Edit `index.html` and reload.
 
+### After any edit to `index.html`
+
+```bash
+node scripts/update-csp-hashes.mjs
+```
+
+The page does not permit inline script in general. Its Content-Security-Policy
+names each of the three `<script>` blocks by the SHA-256 of its own text, so a
+block the policy was not expecting does not run — including one you meant to
+change. Alter a single character inside a block and the browser refuses the
+whole block, which looks like the page loading normally and the tool doing
+nothing whatsoever. This script recomputes the three hashes, rewrites the policy
+in place, and regenerates `SHA256SUMS.txt`. Plain Node, no dependencies, like
+everything else here.
+
+It also refuses to write if the markup has grown an inline event handler
+(`onclick="…"`). A hash covers a script block and nothing else, so making those
+run again would take `'unsafe-hashes'`, which hands back what the pinning is
+for. Handlers belong in `addEventListener`, inside the main block.
+
+```bash
+node scripts/update-csp-hashes.mjs --check
+```
+
+writes nothing and reports whether the pins and the sums are current, which is
+the form for a hook or a CI step. `verify.js` asserts the same thing
+independently — it recomputes the hashes itself rather than trusting the script
+that wrote them — so a forgotten run fails the suite, and with it the pre-push
+hook, instead of reaching a reader as a page that quietly does nothing.
+
 ### Checking a change
 
 ```bash
@@ -463,8 +527,12 @@ Node 22 or later and Google Chrome, and nothing else — no install step, no
 dependencies, in keeping with the rest of this repository. Set `CHROME` if the
 binary is somewhere unusual.
 
-It also refuses any Content-Security-Policy that names an internet origin, and
-checks that the logo — which exists three times over, as `BIP-39-logo.svg`, as
+It also refuses any Content-Security-Policy that names an internet origin,
+recomputes the hash of every inline script and fails if the policy's pins have
+drifted from them or if `'unsafe-inline'` has crept back, fails on any inline
+event handler in the markup, fails if `SHA256SUMS.txt` no longer matches
+`index.html`, watches for the browser reporting a policy violation on either
+origin, and checks that the logo — which exists three times over, as `BIP-39-logo.svg`, as
 the inline mark in the header, and as the favicon's data URI — is the same
 artwork in all three.
 

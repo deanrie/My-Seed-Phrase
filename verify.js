@@ -131,6 +131,14 @@ async function openPage(browser, url) {
     if (m.method === 'Network.requestWillBeSent') requests.push(m.params.request.url);
   });
   await S('Runtime.enable'); await S('Network.enable'); await S('Page.enable');
+  // A blocked script is reported by the BROWSER, not by the page, so it reaches
+  // neither consoleAPICalled nor exceptionThrown: the page simply does less than
+  // it should, quietly. Ask the document instead. Installing the listener through
+  // the debugger is also the only way to run script on a page that pins its
+  // scripts by hash, which is the point of the exercise.
+  await S('Page.addScriptToEvaluateOnNewDocument', { source:
+    "window.__csp=[];addEventListener('securitypolicyviolation',"
+    + "e=>window.__csp.push(e.violatedDirective+' blocked '+(e.blockedURI||'inline')));" });
   await S('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: false, flatten: true });
   const goto = async u => {
     await S('Page.navigate', { url: u });
@@ -226,10 +234,43 @@ function sourceChecks() {
   const csp = (SRC.match(/http-equiv="Content-Security-Policy"[\s\S]*?content="([^"]+)"/) || [])[1] || '';
   // The favicon needs img-src data:. That is inline, not a fetch. What must never
   // appear is a source that can reach the network — a scheme, a host, or a wildcard.
-  const reachesNetwork = /https?:|\/\/|\*/.test(csp);
+  // The pins are base64, which carries / and +, so they are lifted out before
+  // looking for a scheme, a host or a wildcard. Testing the raw policy would fail
+  // on the day a hash happened to contain two slashes in a row.
+  const bareCsp = csp.replace(/'sha256-[A-Za-z0-9+/=]+'/g, '');
+  const reachesNetwork = /https?:|\/\/|\*/.test(bareCsp);
   chk("CSP is default-src 'none' with no network source",
     /default-src 'none'/.test(csp) && !reachesNetwork,
     reachesNetwork ? 'CSP now permits a network origin: ' + csp : '');
+  // Every inline script is named by the hash of its own text. Recomputed here
+  // rather than read from scripts/update-csp-hashes.mjs: the harness judges the
+  // page, not the tool that wrote it. A stale pin does not degrade the page, it
+  // stops that block dead, so this must fail loudly.
+  const inlineScripts = [...SRC.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+  const pins = [...csp.matchAll(/'sha256-([A-Za-z0-9+/=]+)'/g)].map(m => m[1]);
+  const want = inlineScripts.map(m =>
+    crypto.createHash('sha256').update(m[2], 'utf8').digest('base64'));
+  const pinsOk = inlineScripts.length > 0 && pins.length === inlineScripts.length
+    && want.every((h, i) => pins[i] === h)
+    && !/script-src[^;]*'unsafe-inline'/.test(csp);
+  chk('every inline script is pinned by its own hash in the CSP', pinsOk,
+    pinsOk ? `${inlineScripts.length} inline scripts, each pinned, no 'unsafe-inline'`
+           : 'the pins no longer match the scripts — run node scripts/update-csp-hashes.mjs');
+  // A hash covers a script BLOCK and nothing else. onclick="…" would need
+  // 'unsafe-hashes' or 'unsafe-inline', which hands back what the pinning bought.
+  const markupOnly = SRC.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+                        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+                        .replace(/<!--[\s\S]*?-->/g, '');
+  const handler = markupOnly.match(/<[a-zA-Z][^>]*?\s(on[a-z]+)\s*=/);
+  chk('no inline event handler attribute in the markup', !handler,
+    handler ? handler[1] + '= is back; a hash CSP does not cover it' : '');
+  // README step 1 tells readers to STOP on a hash mismatch, so a stale sum here
+  // is not untidiness, it is the page telling an honest reader a false thing.
+  const sumsFile = path.join(ROOT, 'SHA256SUMS.txt');
+  const sums = fs.existsSync(sumsFile) ? fs.readFileSync(sumsFile, 'utf8').trim() : '';
+  const pageSum = crypto.createHash('sha256').update(fs.readFileSync(PAGE)).digest('hex');
+  chk('SHA256SUMS.txt matches index.html', sums === pageSum + '  index.html',
+    sums ? 'published ' + sums : 'SHA256SUMS.txt is missing');
   chk('CNAME and .nojekyll survive',
     fs.existsSync(path.join(ROOT, 'CNAME')) && fs.existsSync(path.join(ROOT, '.nojekyll')));
   chk('nothing is loaded from anywhere (no src=)',
@@ -290,7 +331,32 @@ async function pageChecks(browser, fileUrl, httpUrl) {
     const off = p.requests.filter(u => !u.startsWith(url.replace(/\/$/, '')) && !u.startsWith(url));
     chk(`nothing is fetched from anywhere, ${label}`, off.length === 0, off.join(','));
     chk(`no script errors, ${label}`, p.exceptions.length === 0, p.exceptions.join(' | '));
+    const viol = await p.evaluate('return (window.__csp||[]).join(" | ")');
+    chk(`the content policy blocks nothing the page needs, ${label}`, viol === '', viol);
     await p.close();
+  }
+
+  // The script in <head> is pinned like the other two, and its failure would be
+  // the quietest of the three: someone who pinned dark gets a light page and a
+  // white flash, with nothing else visibly wrong. Its other half, the frame
+  // guard, is checked further down. Over http only — file:// localStorage is at
+  // the browser's discretion, and the page shrugs that off by design.
+  {
+    const tp = await openPage(browser, httpUrl);
+    const set = await tp.evaluate(`${HELPERS} $('theme').click();
+      return {attr: document.documentElement.getAttribute('data-theme'),
+              stored: localStorage.getItem('bip39-theme'),
+              label: $('themetxt').textContent};`);
+    await tp.close();
+    const tp2 = await openPage(browser, httpUrl);   // a fresh load: the head script decides
+    const back = await tp2.evaluate(`return {
+      onLoad: document.documentElement.getAttribute('data-theme'),
+      violations: (window.__csp||[]).join(' | ')};`);
+    await tp2.evaluate("try{localStorage.removeItem('bip39-theme')}catch(e){}");
+    await tp2.close();
+    chk('the pinned head script runs: a dark choice survives a reload',
+      set.attr === 'dark' && set.stored === 'dark' && back.onLoad === 'dark'
+      && back.violations === '', JSON.stringify({ ...set, ...back }));
   }
 
   const p = await openPage(browser, fileUrl);

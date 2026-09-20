@@ -27,7 +27,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   [ -z "$files" ] && files="index.html"
 
   case "$files" in
-    *index.html*|*verify.js*) relevant="yes" ;;
+    # SHA256SUMS.txt and the script that writes it are claims about index.html,
+    # so a change to either is worth the same 90 seconds
+    *index.html*|*verify.js*|*SHA256SUMS.txt*|*scripts/*) relevant="yes" ;;
   esac
 done
 

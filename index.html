@@ -3,8 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Nothing here is fetched, but a click on one of the footer links is still a
+     navigation, and it would otherwise announce where the reader came from. -->
+<meta name="referrer" content="no-referrer">
+<!-- The policy pins rather than permits: each inline script is named by the
+     SHA-256 of its own text, so an edited script block does not run at all
+     instead of running whatever it now says. The hashes are generated, never
+     typed — after ANY edit to this file run
+         node scripts/update-csp-hashes.mjs
+     which rewrites them and SHA256SUMS.txt. connect-src is spelled out even
+     though default-src 'none' already covers it: a request to a network is the
+     one thing this page must never make, so it is said out loud. -->
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">
+      content="default-src 'none'; script-src 'sha256-Ss04wEppl7WHIhjdNmzOhAS8w5blR8MfgSsrYlZhEUc=' 'sha256-Y3g0YMfsIAIe7KZxEEiRTDMoPSZ8p2Cqvdztl1LVMYI=' 'sha256-F+X1KsXspIy+tPxjxUSeZo5Jz+vWIUdssxYlGny558Q='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="description" content="Make a BIP-39 seed phrase from your browser's randomness or your own dice rolls, or find every valid final word for words you already have. One self-contained file that works offline, never touches the internet, SeedQR export.">
 <title>My Seed Phrase</title>
 <!-- The same mark as the header, inline. A data: URI is not a fetch, so this adds
@@ -1145,7 +1156,7 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
     <div class="l">MY SEED PHRASE <span>· MAKE OR FINISH A BIP-39 SEED</span></div>
     <!-- bump the version on every release: it lets a saved copy be compared
          against the repo's releases -->
-    <div class="r">v1.8.3 · RUNS OFFLINE</div>
+    <div class="r">v1.8.4 · RUNS OFFLINE</div>
     <details class="creds">
       <summary>Credits</summary>
       <div class="prov">

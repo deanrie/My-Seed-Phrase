@@ -78,13 +78,40 @@ RIPEMD-160 (see invariants). No build, no dependencies, no backend.
 verify.js (repo root) is the external test harness — single file, no deps.
 Other files: README.md, SECURITY.md, LICENSE, CNAME, .nojekyll,
 BIP-39-logo.svg (source of the inlined header mark + favicon),
-.well-known/security.txt, .gitignore, CLAUDE.md, .githooks/pre-push.
+.well-known/security.txt, .gitignore, CLAUDE.md, .githooks/pre-push,
+SHA256SUMS.txt (generated) and scripts/update-csp-hashes.mjs, which generates
+it. The script is plain Node with no dependencies, the same rule as the page.
 
 ## Invariants — do not break
 
-1. Zero network. CSP is default-src 'none' with exactly one addition,
-   img-src data: (the favicon). verify.js fails any CSP naming a network
-   origin. The page makes one request: itself. Inline SVG/data: only.
+1. Zero network. CSP is default-src 'none' with one addition, img-src data:
+   (the favicon), and connect-src 'none' spelled out although default-src
+   already covers it, because a network request is the one thing this page must
+   never make. verify.js fails any CSP naming a network origin. The page makes
+   one request: itself. Inline SVG/data: only. <meta name="referrer"
+   content="no-referrer"> as well: nothing is fetched, but a click on a footer
+   link is still a navigation.
+   SCRIPT IS PINNED, NOT PERMITTED. script-src names each of the three inline
+   <script> blocks by the SHA-256 of its own text; there is no 'unsafe-inline'.
+   The hashes are GENERATED — after ANY edit to index.html run
+
+       node scripts/update-csp-hashes.mjs
+
+   which rewrites the pins and SHA256SUMS.txt (--check reports without writing).
+   Never hand-edit a pin. A stale one is not a degraded page: the browser
+   refuses that whole block, so the page draws normally and the tool does
+   nothing at all, which is exactly how it looks when it is working except that
+   it isn't. Confirmed by deliberately altering one character inside a block:
+   Chrome reports "script-src-elem blocked inline" and calculate() is undefined.
+   NO INLINE EVENT HANDLER MAY EXIST IN THE MARKUP (onclick="…" and friends). A
+   hash covers a script block and nothing else, so a handler would need
+   'unsafe-hashes', which hands back what the pinning bought. Handlers go in
+   addEventListener inside the main block. Both the script and verify.js refuse
+   one. verify.js recomputes the hashes ITSELF rather than trusting the script
+   that wrote them, asserts SHA256SUMS.txt matches index.html, and listens for
+   the browser reporting a policy violation on both origins — a blocked script
+   is reported by the browser, not the page, so it reaches no console the page
+   can see.
 2. No Math.random() anywhere. crypto.getRandomValues with power-of-two
    masking; randomWords()/randomIndex() assert the precondition and throw.
 3. Wordlist byte-identical to official BIP-39 English:
@@ -331,7 +358,7 @@ BIP-39-logo.svg (source of the inlined header mark + favicon),
 
 ## How to verify + release
 
-    node verify.js            # 75 checks: drives real Chrome headless, checks
+    node verify.js            # 81 checks: drives real Chrome headless, checks
                               # the page against an INDEPENDENT BIP-39 +
                               # fingerprint implementation, both origins,
                               # layout 320/390/1440, blur semantics,
@@ -344,9 +371,17 @@ BIP-39-logo.svg (source of the inlined header mark + favicon),
     node verify.js --calibrate  # only when assess() changes
 
 Page self-test must read 15 of 15 (file:// and http).
-Release: bump the footer version → commit → push → poll Pages build FOR THAT
-COMMIT (not just "built") → live hash == local → tag with hash in message →
-gh release create → re-download asset + fresh-clone verify.js.
+Release: bump the footer version → run node scripts/update-csp-hashes.mjs →
+commit → push → poll Pages build FOR THAT COMMIT (not just "built") → live hash
+== local → tag with hash in message → gh release create → re-download asset +
+fresh-clone verify.js.
+
+The script runs AFTER the version bump and before the commit, every time. The
+bump changes index.html, so it changes the file's own hash and SHA256SUMS.txt
+with it. (It does not move the script pins — the version string lives in the
+footer markup, outside every script block — but run it anyway rather than
+reasoning about which edits are safe. verify.js fails the release if you skip
+it, which is the point.)
 
 The asset must be NAMED myseedphrase.html, because both download links point at
 releases/latest/download/myseedphrase.html. The repo file stays index.html,
