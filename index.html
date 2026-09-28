@@ -26,21 +26,36 @@
      toggle pins dark for those who want it. */
   :root{
     color-scheme:light;
-    --bg:#FAF8F5; --panel:#FFFFFF; --panel2:#F7F5F1;
-    --line:rgba(27,24,20,0.13); --line2:rgba(27,24,20,0.08);
-    --ink:#1B1814; --muted:#57514A; --dim:#7D766B;
+    /* Porcelain, shared with the sister app: a cool off-white ground, white
+       cards lifted by layered shadow rather than drawn by heavy lines, slate
+       ink. The warmth lives in the accent alone. */
+    --bg:#F4F5F8; --panel:#FFFFFF; --panel2:#EFF1F4;
+    --line:rgba(16,19,26,0.09); --line2:rgba(16,19,26,0.06);
+    --ink:#10131A; --muted:#4D5361; --dim:#666C79;
     --orange:#F7931A; --gold:#F0B429; --green:#36D399; --red:#F87171;
     /* Text-weight variants. The deck orange only reaches 2.2:1 on a light
        ground, so light mode uses a deeper burnt orange for small text
-       while keeping #F7931A for rules, borders and fills. */
-    --accent-ink:#9C5206; --green-ink:#0F7A45; --red-ink:#B3261E;
+       while keeping #F7931A for rules, borders and fills. It also sits on
+       the orange tint of a selected chip: 4.72:1 there, over a white route
+       panel. Over the old grey panel it measured 4.23:1, so if the panels ever
+       go grey again this needs deepening (#A34900 clears it). */
+    --accent-ink:#B04F00; --green-ink:#0B7A4B; --red-ink:#B42318;
     --code-ink:#8A5A08; --code-bg:rgba(240,180,41,.16);
-    --field:#FFFFFF; --fieldline:rgba(27,24,20,.16);
-    --grid:rgba(247,147,26,0.055); --glow:rgba(247,147,26,0.10);
-    --shadow:0 1px 2px rgba(27,24,20,.04),0 8px 24px rgba(27,24,20,.05);
-    /* --line is 0.13 alpha: right for dividers, invisible as a button edge on a
-       white panel (1.3:1). This clears the 3:1 WCAG asks of a UI boundary. */
-    --btnline:rgba(27,24,20,.48);
+    /* Every seed box is a field, a shade below the card and edged a little
+       more firmly than a divider, like the sister app's "your passphrase
+       appears here" box: pale in light, sunk in dark. The boxes a seed only
+       appears in took the card's own white for a while, and on a white route
+       panel that left them marked by a hairline alone. */
+    --field:#F7F8FA; --fieldline:rgba(16,19,26,.12);
+    --grid:rgba(16,19,26,0.085); --glow:rgba(247,147,26,0.16); --glow2:rgba(255,190,90,0.10);
+    --shadow:0 1px 1px rgba(16,19,26,.03),0 3px 8px rgba(16,19,26,.04),
+             0 18px 40px -12px rgba(16,19,26,.10);
+    --cardedge:inset 0 1px 0 rgba(255,255,255,.9);
+    --blur:none;
+    /* --line is 0.09 alpha: right for dividers, invisible as a button edge
+       (about 1.2:1). This clears the 3:1 WCAG asks of a UI boundary, on the
+       white card and on the grey route panels alike. */
+    --btnline:rgba(16,19,26,.48);
     --sans:-apple-system,system-ui,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
     --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
     --display:'Avenir Next','Avenir','Nunito Sans','Segoe UI Variable Display',
@@ -56,35 +71,53 @@
   }
   :root[data-theme="dark"]{
     color-scheme:dark;
-    /* Near-black, neutral — no brown cast. Panel and line tints a step
-       stronger so cards and fields separate from the ground; text tokens
-       match the light theme's contrast. */
-    --bg:#0C0C0E; --panel:rgba(255,255,255,0.055); --panel2:rgba(255,255,255,0.03);
-    --line:rgba(255,255,255,0.12); --line2:rgba(255,255,255,0.08);
-    --ink:#F4F6FB; --muted:rgba(244,246,251,0.72); --dim:rgba(244,246,251,0.5);
-    --accent-ink:#F7931A; --green-ink:#36D399; --red-ink:#F87171;
-    --btnline:rgba(255,255,255,.42);
+    /* Midnight, shared with the sister app: a blue-black ground under an amber
+       glow, frosted-glass cards with a lit top edge, and fields sunk below the
+       card rather than laid on it. Text tokens keep the light theme's contrast. */
+    --bg:#07080C; --panel:rgba(255,255,255,0.04); --panel2:rgba(255,255,255,0.055);
+    --line:rgba(255,255,255,0.09); --line2:rgba(255,255,255,0.065);
+    /* --dim at .53, not the sister app's .48: the dice size tiles sit a layer
+       deeper than anything in the sister app (a tile, on a route panel, on the
+       card), and their roll counts measure 4.25:1 at .48. */
+    --ink:#EEF0F6; --muted:rgba(238,240,246,0.72); --dim:rgba(238,240,246,0.53);
+    --accent-ink:#FFA53D; --green-ink:#3DDBA0; --red-ink:#FF8A8A;
+    --btnline:rgba(255,255,255,.40);
     --code-ink:#F0B429; --code-bg:rgba(240,180,41,.08);
-    --field:rgba(255,255,255,.06); --fieldline:rgba(255,255,255,.24);
-    --grid:rgba(247,147,26,0.025); --glow:rgba(247,147,26,0.13);
-    --shadow:none;
+    --field:rgba(0,0,0,.34); --fieldline:rgba(255,255,255,.11);
+    --grid:rgba(255,255,255,0.075); --glow:rgba(247,147,26,0.22); --glow2:rgba(255,94,58,0.10);
+    --shadow:0 24px 60px -24px rgba(0,0,0,.85);
+    --cardedge:inset 0 1px 0 rgba(255,255,255,.07);
+    --blur:blur(16px) saturate(140%);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);
        line-height:1.5;min-height:100vh;position:relative;overflow-x:hidden}
-  /* faint orange graph paper, lifted from the deck */
-  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-    background-image:linear-gradient(var(--grid) 1px,transparent 1px),
-                     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:80px 80px}
-  /* the bottom-left ember */
-  body::after{content:'';position:fixed;left:-260px;bottom:-320px;width:900px;height:900px;
-    background:radial-gradient(circle,var(--glow),transparent 62%);
-    pointer-events:none;z-index:0}
-  .topbar{position:fixed;top:0;left:0;right:0;height:6px;
-    background:linear-gradient(90deg,var(--orange),var(--gold));z-index:10}
+  /* A fine dot grid, strongest under the header and fading out below it, so
+     the texture frames the tool without sitting behind the reading. */
+  body::before{content:'';position:absolute;inset:0 0 auto 0;height:900px;
+    pointer-events:none;z-index:0;
+    background-image:radial-gradient(var(--grid) 1px,transparent 1.3px);
+    background-size:22px 22px;
+    -webkit-mask-image:radial-gradient(ellipse 70% 100% at 50% 0%,#000 25%,transparent 75%);
+    mask-image:radial-gradient(ellipse 70% 100% at 50% 0%,#000 25%,transparent 75%)}
+  /* Light from above: a wide amber glow over the header with a warmer core,
+     in place of the old ember in the corner. The sister app draws this on a box
+     min(1400px,160vw) wide, centred, which on a phone is 624px across a 390px
+     screen: that makes the page scrollable sideways wherever overflow-x:hidden
+     on <body> is not honoured, and fails verify.js's layout check everywhere.
+     Same light, drawn on a page-wide box: the two ellipses carry their sizes
+     directly (45% and 25% of that width, 50% and 30% of 900px), so nothing
+     reaches past the edge. */
+  body::after{content:'';position:absolute;top:-420px;left:0;right:0;height:900px;
+    pointer-events:none;z-index:0;
+    background:radial-gradient(ellipse min(630px,72vw) 450px at 50% 450px,
+                 var(--glow),transparent 70%),
+               radial-gradient(ellipse min(350px,40vw) 270px at calc(50% + min(112px,12.8vw)) 504px,
+                 var(--glow2),transparent 70%)}
+  .topbar{position:fixed;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,#E8710A,var(--orange) 30%,var(--gold) 60%,var(--orange));z-index:10}
   main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:5rem 1.5rem 4rem}
 
   /* ---- kicker + hero ---- */
@@ -99,6 +132,12 @@
   h1{font-family:var(--display);font-size:clamp(2.1rem,5.5vw,3.5rem);font-weight:700;
      letter-spacing:-.02em;line-height:1.04;margin-bottom:1rem}
   h1 em{color:var(--accent-ink);font-style:normal}
+  /* the accent word as a gradient wherever a browser can clip one to text; the
+     solid accent above is what anything else shows */
+  @supports (-webkit-background-clip:text) or (background-clip:text){
+    h1 em{background:linear-gradient(100deg,var(--accent-ink),var(--orange) 55%,var(--gold));
+      -webkit-background-clip:text;background-clip:text;color:transparent}
+  }
   .dek{font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);max-width:44rem;line-height:1.45}
   .dek b{color:var(--ink)}
   /* ---- hero call-to-action: the "how do I do it" answer ---- */
@@ -127,9 +166,15 @@
 
 
   /* ---- cards ---- */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  /* Frosted in dark only: --blur is none in light, where the layered shadow
+     does the lifting. backdrop-filter makes a card the containing block for any
+     position:fixed descendant, so a tooltip placed INSIDE a card would stop
+     being pinned to the screen below 560px (invariant 10). Today the only
+     tooltip is in the header, and the SeedQR modal is a child of <main>. */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;
         padding:clamp(2rem,4.2vw,2.9rem) clamp(1.4rem,3vw,2.1rem);
-        margin-bottom:1.15rem;box-shadow:var(--shadow)}
+        margin-bottom:1.15rem;box-shadow:var(--cardedge),var(--shadow);
+        -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
   .card.hot{border-color:rgba(247,147,26,0.55);background:rgba(247,147,26,0.06)}
   .h{font-size:var(--fs-xs);font-weight:700;letter-spacing:.22em;color:var(--dim);
      text-transform:uppercase;margin-bottom:1.1rem}
@@ -196,15 +241,23 @@
     cursor:pointer;border:2px solid var(--btnline);background:var(--panel);color:var(--muted);
     transition:border-color .15s,color .15s,background .15s}
   button:hover{border-color:rgba(247,147,26,.5);color:var(--ink)}
-  button.primary{background:var(--orange);border-color:var(--orange);color:#000}
-  button.primary:hover{background:var(--gold);border-color:var(--gold);color:#000}
+  /* The primary button is the one lit thing on the page: a gradient with a
+     highlight along its top edge and a glow beneath, rising a pixel on hover. */
+  button.primary{background:linear-gradient(135deg,#FFB547,var(--orange) 55%,#EC7A0C);
+    border-color:rgba(236,122,12,.9);color:#1A0E00;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px rgba(247,147,26,.65);
+    transition:transform .12s,box-shadow .15s}
+  button.primary:hover{background:linear-gradient(135deg,#FFC261,#FFA02E 55%,#F2840F);
+    border-color:rgba(236,122,12,.9);color:#1A0E00;transform:translateY(-1px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 26px -8px rgba(247,147,26,.75)}
+  button.primary:active{transform:translateY(0)}
   /* The dice button is the first control here that can be unavailable, and a
      primary button that cannot be pressed must not still look like the thing
      to press. Greyed, not merely dimmed, so it reads as off rather than faint. */
   button:disabled,button.primary:disabled{background:var(--panel2);border-color:var(--line2);
-    color:var(--dim);cursor:not-allowed}
+    color:var(--dim);cursor:not-allowed;box-shadow:none;transform:none}
   button:disabled:hover,button.primary:disabled:hover{background:var(--panel2);
-    border-color:var(--line2);color:var(--dim)}
+    border-color:var(--line2);color:var(--dim);box-shadow:none;transform:none}
   .hint{font-size:var(--fs-sm);color:var(--dim);margin-top:.9rem;letter-spacing:.02em}
   /* Saving is the only thing on this page that leaves the seed behind after
      the tab is shut, so its warning is not dim like the rest — it is red, and
@@ -269,8 +322,12 @@
      reader comparing the two never has to open it to know what it is. */
   .pathslede{font-size:var(--fs-md);color:var(--muted);line-height:1.6;margin:.7rem 0 0;
     max-width:46rem}
-  .path{border:1px solid var(--line2);border-radius:14px;padding:1.1rem 1.2rem;
-    margin-top:1.1rem;background:var(--panel2);scroll-margin-top:1.25rem}
+  /* The card's own surface and a hairline, as the sister app draws its inner
+     boxes, rather than a grey fill: on grey, the pale field you type into and
+     the white box a seed appears in could not be told apart, and the card read
+     as a stack of grey slabs. */
+  .path{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;
+    margin-top:1.1rem;background:var(--panel);scroll-margin-top:1.25rem}
   .path>.pathhead,.path>summary{list-style:none;display:grid;align-items:center;
     grid-template-columns:auto minmax(0,1fr) auto;
     grid-template-areas:"num title btn" "sub sub sub";
@@ -338,8 +395,8 @@
     border-radius:10px;padding:.7rem .8rem;margin-top:1rem;line-height:1.6;
     background:rgba(248,113,113,.07)}
   .sizes{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
-  .size{flex:1 1 5.6rem;padding:.55rem .5rem;border-radius:10px;background:var(--panel2);
-    border:1px solid var(--line2);cursor:pointer;text-align:center;color:var(--ink);
+  .size{flex:1 1 5.6rem;padding:.55rem .5rem;border-radius:10px;background:var(--panel);
+    border:1px solid var(--line);cursor:pointer;text-align:center;color:var(--ink);
     font:600 var(--fs-sm)/1.35 var(--sans);transition:border-color .12s,background .12s}
   .size:hover{border-color:rgba(247,147,26,.5)}
   .size .n{display:block;font-size:var(--fs-xs);color:var(--dim);font-weight:400;
@@ -353,12 +410,13 @@
   #rolls{width:100%;min-height:5rem;padding:.9rem 3.3rem .9rem 1rem;
     border:1px solid var(--fieldline);border-radius:12px;background:var(--field);
     color:var(--ink);font:15px/1.9 var(--mono);letter-spacing:.16em;resize:vertical}
-  /* --muted, not the --dim every other placeholder uses: this one carries the
-     "these numbers are your seed" warning, and --dim measures 4.49:1, a hair
-     under the 4.5:1 floor — fine for a hint, not for a warning. */
+  /* --muted, not the --dim every other placeholder uses: chosen when this
+     placeholder still carried the "these numbers are your seed" warning and
+     --dim measured 4.49:1 on the old field. The warning has since moved to the
+     panel's subheading and --dim now clears 4.9:1, so either would do. */
   #rolls::placeholder{color:var(--muted);letter-spacing:.02em}
   #rolls:focus{outline:none;border-color:rgba(247,147,26,.6);
-    box-shadow:0 0 0 3px var(--glow)}
+    box-shadow:0 0 0 3px rgba(247,147,26,.09)}
   #rolls.shield{color:transparent;text-shadow:0 0 .55em var(--muted);caret-color:transparent}
   #rolls.shield::placeholder{text-shadow:none}
   .rollrow{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
@@ -408,9 +466,9 @@
   .qrveil{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.65);
     display:flex;align-items:center;justify-content:center;padding:1.2rem;
     overflow-y:auto}
-  .qrcard{background:var(--bg);border:1px solid var(--line);border-radius:18px;
+  .qrcard{background:var(--bg);border:1px solid var(--line);border-radius:22px;
     padding:clamp(1.2rem,3vw,1.8rem);max-width:23rem;width:100%;margin:auto;
-    box-shadow:var(--shadow)}
+    box-shadow:var(--cardedge),var(--shadow)}
   .qrhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
   .qrhead .h{margin-bottom:0}
   button.qrx{padding:.1rem .5rem .25rem;font-size:var(--fs-xl);line-height:1;font-weight:400;
@@ -531,7 +589,7 @@
      escape it, and an address you type yourself is the one that cannot lie. */
   #framed{display:none}
   html[data-framed] .topbar,html[data-framed] main{display:none}
-  html[data-framed] #framed{display:block;max-width:34rem;margin:14vh auto 0;
+  html[data-framed] #framed{display:block;position:relative;z-index:1;max-width:34rem;margin:14vh auto 0;
     padding:0 1.4rem;font:400 var(--fs-md)/1.75 var(--sans);color:var(--ink)}
   #framed p{margin:0 0 1rem}
   #framed b{color:var(--accent-ink)}
@@ -1156,7 +1214,7 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
     <div class="l">MY SEED PHRASE <span>· MAKE OR FINISH A BIP-39 SEED</span></div>
     <!-- bump the version on every release: it lets a saved copy be compared
          against the repo's releases -->
-    <div class="r">v1.8.4 · RUNS OFFLINE</div>
+    <div class="r">v1.8.5 · RUNS OFFLINE</div>
     <details class="creds">
       <summary>Credits</summary>
       <div class="prov">

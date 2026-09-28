@@ -147,7 +147,7 @@ it. The script is plain Node with no dependencies, the same rule as the page.
    the file and therefore the hash you publish. It is the only place the
    version appears. Notes: a one-line summary, "## New"/"## Fixed" in plain
    English, "still passes 15 of 15", then "## Verify your download" with the
-   shasum block. Current release: v1.8.3.
+   shasum block. Current release: v1.8.5.
 7. Blur rule: anything the generator produces is born hidden (complete AND
    partial seeds); typed words are born visible, but typing NEVER lifts a blur
    already engaged — a box hidden when typing began stays hidden, so a
@@ -312,7 +312,8 @@ it. The script is plain Node with no dependencies, the same rule as the page.
     No roll count in the instruction: the size buttons already say "50 rolls",
     and the old "A 12-word seed needs 50 rolls" line only repeated them.
     The placeholder is now just a format hint, "Enter your die rolls here.
-    431256…", in --muted (--dim measures 4.49:1, a hair under the floor). It
+    431256…", in --muted (--dim measured 4.49:1 on the old palette; it clears
+    4.9:1 on the Porcelain field, so either would now do). It
     still wraps past the field at 320px, as the older, longer one did. Cosmetic,
     since it carries nothing that matters. The 🎲 sits in the subheading,
     aria-hidden so a screen reader reads the instruction, not "game die".
@@ -466,9 +467,44 @@ runs on your machine at push time. Read the diff on that file like any other.
   the secret's lifetime over an old Safari quirk that can produce an empty
   file. Deliberate; revisit only if a real empty-download report arrives.
 
-Design: light ships as the default for everyone and the toggle pins dark (it
-persists; the OS preference is deliberately not read), Bitcoin orange #F7931A
-(#9C5206 for small text on light), system fonts only, ≥4.5:1 for new colors.
+Design: two themes shared with the sister app, Porcelain (light, the default for
+everyone) and Midnight (dark, pinned by the toggle; it persists; the OS
+preference is deliberately not read), taken from My Passphrase v1.17.0 by ROLE,
+not by name. Bitcoin orange #F7931A for fills and rules, system fonts only, and
+≥4.5:1 for every text token on every surface it is USED on, not just the card.
+   Boxes follow the sister app's: the route panels and the size tiles take the
+   card's own surface (--panel) and a hairline (--line), NOT a grey fill; on
+   grey, the card read as a stack of grey slabs. Every seed box, including the
+   two a seed only appears in (#gseed, #dseed), is a field (--field,
+   --fieldline): pale in light, sunk in dark. That is the ROLE of the sister
+   app's "your passphrase appears here" box. They were briefly the card's own
+   white, as read-only output wells, and on a white route panel a hairline was
+   all that marked them; the owner asked for them to stand off the panel.
+   That choice also carries the light accent: #B04F00 measures 4.72:1 on
+   a selected chip over white, but only 4.23:1 over the old grey. If the panels
+   ever go grey again, deepen --accent-ink (#A34900 clears it).
+   Departures from the sister app, each for a reason:
+   - Dark --dim is .53, not .48: the dice size tiles sit a layer deeper than
+     anything there (a tile, on a route panel, on the card), and their roll
+     counts measure 4.25:1 at .48.
+   - --btnline stays: this app's 2px button edge at 3:1. The sister app has no
+     such token; its buttons use a hairline.
+   - The header glow is drawn on a page-wide box with the ellipse radii given
+     directly, not on a centred min(1400px,160vw) box. That box is 624px wide on
+     a 390px phone: it made the page scrollable sideways wherever
+     overflow-x:hidden on <body> is not honoured, and failed verify.js's
+     320/390/1440 layout check. Same light, same pixels, nothing past the edge.
+   Accepted by the owner: the title's gradient in light fades from 5.3:1 to
+   1.65:1 at the gold end, under the 3:1 large text wants. Two older soft spots
+   predate the themes: the faded index on a chosen ending chip and the faded
+   roll count on a selected size tile (opacity .7/.75 on accent text) measure
+   2.85 and 3.10 in light.
+   Dark cards use backdrop-filter, which makes a card the containing block for
+   position:fixed descendants. A tooltip placed INSIDE a card would therefore
+   stop being pinned to the screen below 560px (invariant 10), in dark only.
+   Today the only tooltip is in the header and the SeedQR modal is a child of
+   <main>, so nothing is affected; keep it that way or move the frost onto a
+   layer behind the card.
 
 Type scale: --fs-2xs .62 / --fs-xs .72 / --fs-sm .82 / --fs-md .95 / --fs-lg
 1.15 / --fs-xl 1.35 rem, identical to the sister app so the two read as one
