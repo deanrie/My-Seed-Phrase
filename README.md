@@ -511,7 +511,8 @@ node scripts/update-csp-hashes.mjs --check
 ```
 
 writes nothing and reports whether the pins and the sums are current, which is
-the form for a hook or a CI step. `verify.js` asserts the same thing
+the form for a hook or a CI step — and is what `.github/workflows/verify.yml`
+runs, together with `verify.js`, on every push and pull request. `verify.js` asserts the same thing
 independently — it recomputes the hashes itself rather than trusting the script
 that wrote them — so a forgotten run fails the suite, and with it the pre-push
 hook, instead of reaching a reader as a page that quietly does nothing.

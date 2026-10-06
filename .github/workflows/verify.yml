@@ -1,0 +1,47 @@
+name: Verify
+
+# GitHub Pages serves main, so a push IS a deploy, and README step 1 tells
+# people to compare the file's hash against the published one and stop if it
+# differs. Until now the only gate was .githooks/pre-push, which git does not
+# enable on a fresh clone (core.hooksPath has to be set by hand) — v1.5.2 went
+# out with 7 of its own checks failing because nothing ran them. This runs the
+# same two things on every push and pull request, on a machine nobody forgot
+# to configure:
+#
+#   node scripts/update-csp-hashes.mjs --check   pins and SHA256SUMS.txt current
+#   node verify.js                               81 checks in headless Chrome
+#
+# verify.js needs Node 22+ and Google Chrome, both preinstalled on the runner.
+# Zero dependencies, no npm install, same rule as the page.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: CSP pins and SHA256SUMS.txt are current
+        run: node scripts/update-csp-hashes.mjs --check
+
+      - name: verify.js in headless Chrome
+        env:
+          CHROME: /usr/bin/google-chrome
+        run: |
+          "$CHROME" --version
+          node verify.js

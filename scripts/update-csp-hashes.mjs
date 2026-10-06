@@ -35,7 +35,13 @@ const src   = bytes.toString('utf8');
 if (!Buffer.from(src, 'utf8').equals(bytes)) die('index.html is not valid UTF-8');
 
 /* ---- inline scripts ---------------------------------------------------- */
-const blocks = [...src.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+// An HTML comment hides everything up to its "-->", so a literal "<script>"
+// written inside one is not a block. Treating it as one would hash the wrong
+// bytes and pin a hash the browser never matches — and the page would quietly
+// do nothing, which is exactly the failure this script exists to prevent.
+const comments = [...src.matchAll(/<!--[\s\S]*?-->/g)].map(m => [m.index, m.index + m[0].length]);
+const inComment = i => comments.some(([a, b]) => i >= a && i < b);
+const blocks = [...src.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(b => !inComment(b.index));
 if (!blocks.length) die('no inline <script> block found');
 for (const b of blocks) {
   if (/\bsrc\s*=/i.test(b[1])) die(`a <script> at line ${lineOf(src, b.index)} has a src attribute; this page loads nothing`);
