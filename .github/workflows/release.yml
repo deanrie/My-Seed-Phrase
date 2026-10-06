@@ -30,7 +30,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # to create the release and upload its assets
+      contents: write      # to create the release and upload its assets
+      id-token: write      # to sign the provenance attestation (Sigstore)
+      attestations: write  # to store it against the repository
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -81,6 +83,16 @@ jobs:
             echo
             echo 'If the value differs, stop. Do not open the file.'
           } > notes.md
+
+      # Provenance: SHA256SUMS.txt travels in the same repository as the page,
+      # so whoever could change one could change the other (the README says
+      # so). This signs the asset through Sigstore with the identity of THIS
+      # workflow run, which the repository alone cannot forge. Anyone verifies:
+      #     gh attestation verify ~/Downloads/myseedphrase.html -R seQRets/My-Seed-Phrase
+      - name: Attest the asset's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/myseedphrase.html
 
       - name: Create the release
         env:

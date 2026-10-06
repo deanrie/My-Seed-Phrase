@@ -350,6 +350,19 @@ file that was published. It cannot tell you the published file is honest:
 change one could change the other. The section below, and step 5 in the guide
 above, are what speak to the contents.
 
+One check does not share that weakness. Each release is signed, through
+[Sigstore](https://www.sigstore.dev/), by the GitHub Actions run that built it
+— a signature the repository's contents cannot forge — and the signature is
+stored against this repository. With the [GitHub CLI](https://cli.github.com/):
+
+```bash
+gh attestation verify ~/Downloads/myseedphrase.html -R seQRets/My-Seed-Phrase
+```
+
+It names the workflow, the commit and the tag the file came from. Releases
+before this was added have no attestation; for those, the checksum is what
+there is.
+
 ## Verify before you trust it
 
 Don't take the above on faith. Two checks, both quick:
