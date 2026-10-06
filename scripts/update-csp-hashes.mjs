@@ -2,6 +2,10 @@
 /* Recompute the SHA-256 pins for index.html's inline scripts, rewrite the CSP
    meta tag in place, and regenerate SHA256SUMS.txt.
  *
+ * SHARED VERBATIM between seQRets/My-Seed-Phrase and seQRets/My-Passphrase:
+ * the two pages follow one rule set, and each repository's CI fails if its
+ * copy differs from the sister's. Fix a bug here, then copy the file across.
+ *
  * RUN THIS AFTER ANY EDIT TO index.html. The page pins each inline <script> by
  * hash instead of allowing 'unsafe-inline', so a single changed character
  * inside a script block makes the browser refuse to run that block. The failure
@@ -100,5 +104,5 @@ if (CHECK) {
   if (sumsStale) writeFileSync(SUMS, sums);
   console.log(`\nCSP script-src   ${cspStale ? 'rewritten' : 'already current'}`);
   console.log(`SHA256SUMS.txt   ${sumsStale ? 'rewritten' : 'already current'}  ${pageHash}`);
-  if (cspStale) console.log('\nindex.html changed, so it needs a release: see CLAUDE.md invariant 6.');
+  if (cspStale) console.log('\nindex.html changed, so it needs a release with the new hash.');
 }
