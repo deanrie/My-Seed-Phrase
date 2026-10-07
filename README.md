@@ -29,6 +29,15 @@ it returns every ending that produces a valid phrase.
 | 21 | 20 | 7 | 16 |
 | 24 | 23 | 8 | 8 |
 
+Give it a **complete** phrase instead and it checks it: a correct checksum gets
+a green border, the master fingerprint and the SeedQR; a wrong one is named,
+together with the endings that *would* have completed the words before it. If
+the wallet uses a BIP-39 passphrase, type it in the field under the box and the
+fingerprint follows it (the standard's rule: salt `"mnemonic" + passphrase`,
+both NFKD-normalized), so the eight characters can be compared against the
+device. `verify.js` holds that to an independent derivation in Node, using the
+standard's `TREZOR` test passphrase.
+
 **Generate complete seed** produces a wallet-ready phrase in one press: it
 draws 11, 14, 17, 20 or 23 words from the browser's random number generator,
 the one built for security work (`crypto.getRandomValues`), works out every
