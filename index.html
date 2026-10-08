@@ -15,7 +15,7 @@
      though default-src 'none' already covers it: a request to a network is the
      one thing this page must never make, so it is said out loud. -->
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'sha256-Ss04wEppl7WHIhjdNmzOhAS8w5blR8MfgSsrYlZhEUc=' 'sha256-Y3g0YMfsIAIe7KZxEEiRTDMoPSZ8p2Cqvdztl1LVMYI=' 'sha256-L/tneT15YSLenV/TXzxz9PsrYbi3A2x9anuBZ8p8Y88='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+      content="default-src 'none'; script-src 'sha256-Ss04wEppl7WHIhjdNmzOhAS8w5blR8MfgSsrYlZhEUc=' 'sha256-Y3g0YMfsIAIe7KZxEEiRTDMoPSZ8p2Cqvdztl1LVMYI=' 'sha256-CRR00gyE3NFArkD9SWxG3d7tGqE42z5yivybeln3Z2Y='; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="description" content="Make a BIP-39 seed phrase from your browser's randomness or your own dice rolls, or find every valid final word for words you already have. One self-contained file that works offline, never touches the internet, SeedQR export.">
 <title>My Seed Phrase</title>
 <!-- The same mark as the header, inline. A data: URI is not a fetch, so this adds
@@ -95,7 +95,7 @@
   /* Print, or "Save as PDF", writes the screen to a file — a revealed seed,
      the rolls, the endings, a QR, a fingerprint. Blank all of it on paper. */
   @media print{
-    #in,#inpass,#gseed,#dseed,#rolls,#grid,#qrcanvas,.qrbox,#infpv,#gfpv,#dfpv,#qrfp{visibility:hidden !important}
+    #in,#inpass,#gpass,#dpass,#gseed,#dseed,#rolls,#grid,#qrcanvas,.qrbox,#infpv,#gfpv,#dfpv,#qrfp{visibility:hidden !important}
     .qrveil{display:none !important}
   }
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);
@@ -812,6 +812,11 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
         <div class="infp" id="gfp" style="display:none">Master fingerprint&ensp;<b id="gfpv">…</b></div>
       </div>
       <div class="hint" id="ghint" style="display:none"></div>
+      <div class="passrow" id="gpassrow" style="display:none">
+        <label for="gpass">Going to use a BIP-39 passphrase with this seed? Type it to see the fingerprint the device will show (optional)</label>
+        <input type="password" id="gpass" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+               placeholder="Leave empty for the usual, passphrase-free wallet">
+      </div>
       </div>
     </details>
 
@@ -885,12 +890,17 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
         <div class="infp" id="dfp" style="display:none">Master fingerprint&ensp;<b id="dfpv">…</b></div>
       </div>
       <div class="hint" id="dhint" style="display:none"></div>
+      <div class="passrow" id="dpassrow" style="display:none">
+        <label for="dpass">Going to use a BIP-39 passphrase with this seed? Type it to see the fingerprint the device will show (optional)</label>
+        <input type="password" id="dpass" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+               placeholder="Leave empty for the usual, passphrase-free wallet">
+      </div>
       </div>
     </details>
     <details class="path" id="finishpath">
       <summary class="pathhead">
         <span class="pathnum">3</span>
-        <span class="pathtitle">Finish a seed you already have</span>
+        <span class="pathtitle">Finish or check a seed</span>
         <span class="pathsub">You have 11, 14, 17, 20 or 23 words: the app returns every final
           word the checksum allows. Or paste a complete phrase to check it and see its
           fingerprint.</span>
@@ -965,7 +975,7 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
         a length, press Generate, and your browser's cryptographic randomness draws every word.
         <b>Roll your own randomness:</b> roll a die, type the numbers in, and the app turns your
         rolls into the words: slower, and the one route that does not ask you to trust the
-        browser's randomness at all. <b>Finish a seed you already have:</b> if you chose your
+        browser's randomness at all. <b>Finish or check a seed:</b> if you chose your
         first 11, 14, 17, 20 or 23 words yourself, by dice, by hand or with another tool, a
         wallet will reject the phrase unless the last word carries the right checksum, and this
         page lists every last word that works. The questions below are the fourth thing it does:
@@ -990,7 +1000,7 @@ try{if(window.top!==window.self)document.documentElement.setAttribute("data-fram
         and the count keeps score. <b>Make a seed</b> turns the finished rolls into words, the
         <b>eye</b> in the corner of the box covers the numbers the way it covers the words, and
         <b>Clear</b> wipes the rolls and the seed together.</p>
-        <p><b>Finish a seed you already have.</b> Type the words you have and press
+        <p><b>Finish or check a seed.</b> Type the words you have and press
         <b>Check or finish the phrase</b>. One word short of a full phrase, it lists every final
         word that completes them: click any one to see the finished phrase, or <b>Pick at
         random</b> to let the browser's cryptographic generator choose for you. A complete
@@ -4340,18 +4350,27 @@ function resultField(p) {
       el("ctl").style.display = "flex";
       setPeek(false);
       el("fp").style.display = "block";
-      el("fpv").textContent = "…";
-      const t = ++fpToken;
-      masterFingerprint(words).then(fp => {
-        if (t === fpToken) el("fpv").textContent = fp || "unavailable";
-      });
+      el("passrow").style.display = "block";
+      api.refp();
       el("hint").style.display = "block";
       el("hint").textContent = hint;
+    },
+    // The fingerprint for the seed in the box, with this panel's passphrase if
+    // one was typed: a new seed has no passphrase yet, but someone who intends
+    // to use one wants to know the eight characters the device will show.
+    refp() {
+      el("fpv").textContent = "…";
+      const t = ++fpToken;
+      masterFingerprint(api.words(), el("pass").value).then(fp => {
+        if (t === fpToken) el("fpv").textContent = fp || "unavailable";
+      });
     },
     hide() { el("seed").classList.add("shield"); setPeek(false) },
     clear() {
       fpToken++;
       el("seed").value = "";
+      el("pass").value = "";
+      el("passrow").style.display = "none";
       el("seed").classList.remove("shield");
       el("wrap").classList.remove("on", "fp");
       el("ctl").style.display = "none";
@@ -4370,7 +4389,8 @@ function resultField(p) {
       + "page and copy nothing else, it is cleared after 60 seconds; the page never reads it. "
       + "For a seed that will hold real money, write it down by hand instead.";
   };
-  el("qr").onclick = () => openSeedQR(api.value());
+  el("qr").onclick = () => openSeedQR(api.value(), el("pass").value);
+  el("pass").addEventListener("input", () => { if (el("seed").value.trim()) api.refp(); });
   return api;
 }
 const madeField = resultField("g");

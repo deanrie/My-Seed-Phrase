@@ -1173,6 +1173,27 @@ async function finishChecks(browser, base) {
       && r.bad.grid === 'block' && r.bad.chips.length === 128 && r.bad.chips.includes('about'), r.err || JSON.stringify({ ...r.bad, chips: r.bad.chips.length }));
   chk('a count that is neither complete nor one short is still refused', !r.err && /complete phrase of 12/.test(r.count), r.err || r.count);
   chk('Clear wipes the passphrase with the panel', !r.err && r.passAfterClear === '', r.err || r.passAfterClear);
+
+  // Panels 1 and 2: a fresh seed has no passphrase yet, but someone who intends
+  // to use one can type it and see the fingerprint the device will show.
+  const g = await p.evaluate(`${HELPERS}
+    $('makepath').open = true; $('gclr').click();
+    const out = { passRowBefore: $('gpassrow').style.display };
+    $('genlen').value = '12'; $('genfull').click();
+    if(!await wait(()=>/^[0-9a-f]{8}$/.test($('gfpv').textContent), 10000)) return {err:'panel 1 fp timeout'};
+    out.seed = $('gseed').value.trim(); out.fp = $('gfpv').textContent; out.passRowAfter = $('gpassrow').style.display;
+    $('gpass').value = 'TREZOR'; $('gpass').dispatchEvent(new Event('input'));
+    if(!await wait(()=>/^[0-9a-f]{8}$/.test($('gfpv').textContent) && $('gfpv').textContent !== out.fp, 10000)) return {err:'panel 1 passphrase fp timeout'};
+    out.passFp = $('gfpv').textContent;
+    $('gqr').click();
+    if(!await wait(()=>/^[0-9a-f]{8}$/.test($('qrfp').textContent), 10000)) return {err:'panel 1 qr fp timeout'};
+    out.qrFp = $('qrfp').textContent; $('qrclose').click();
+    $('gclr').click(); out.afterClear = { pass: $('gpass').value, row: $('gpassrow').style.display };
+    return out;`);
+  chk('panel 1: the passphrase field appears with the seed, and its fingerprint matches an independent derivation',
+      !g.err && g.passRowBefore === 'none' && g.passRowAfter === 'block' && g.fp === nodeFpPass(g.seed, '')
+      && g.passFp === nodeFpPass(g.seed, 'TREZOR') && g.qrFp === g.passFp, g.err || `${g.fp} → ${g.passFp}`);
+  chk('panel 1: Clear wipes the passphrase and folds the field away', !g.err && g.afterClear.pass === '' && g.afterClear.row === 'none');
   await p.close();
 }
 
